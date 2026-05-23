@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: ms-security-route
+          uri: lb://MS-SECURITY
+          predicates:
+            - Path=/auth/**, /users/**
+
+        - id: ms-academic-route
+          uri: lb://MS-ACADEMIC
+          predicates:
+            - Path=/ies/**, /schools/**, /disciplines/**
+
+        - id: ms-teacher-route
+          uri: lb://MS-TEACHER
+          predicates:
+            - Path=/teachers/**, /degrees/**
+
+        - id: ms-planning-route
+          uri: lb://MS-PLANNING
+          predicates:
+            - Path=/availabilities/**, /interests/**
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/

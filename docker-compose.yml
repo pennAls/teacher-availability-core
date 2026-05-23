@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  db-security:
+    image: postgres:15
+    container_name: db-security
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ms-security_db
+
+  db-academic:
+    image: postgres:15
+    container_name: db-academic
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ms-academic_db
+
+  db-teacher:
+    image: postgres:15
+    container_name: db-teacher
+    restart: always
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ms-teacher_db
+
+
+  db-planning:
+    image: postgres:15
+    container_name: db-planning
+    restart: always
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ms-planning_db
+
