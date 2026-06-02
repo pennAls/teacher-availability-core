@@ -1,8 +1,12 @@
 package org.example.msacademic.exceptions;
 
+
+import org.example.msacademic.modules.disciplines.domain.exceptions.DisciplineAlreadyExistsException;
+import org.example.msacademic.modules.disciplines.domain.exceptions.DisciplineNotFoundException;
+import org.example.msacademic.modules.ies.domain.exceptions.IesNotFoundException;
+import org.example.msacademic.modules.schools.domain.exceptions.SchoolAlreadyExistsException;
+import org.example.msacademic.modules.schools.domain.exceptions.SchoolNotFoundException;
 import org.example.mssecurity.exceptions.InactiveEntityException;
-import org.example.mssecurity.modules.users.domain.exceptions.EmailAlreadyExistsException;
-import org.example.mssecurity.modules.users.domain.exceptions.UserNotFoundException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,11 +15,13 @@ import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.Map;
 
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
@@ -86,22 +92,47 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
     }
 
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.CONFLICT.value(),
-                "EMAIL_ALREADY_EXISTS"
-        );
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                "USER_NOT_FOUND"
+    @ExceptionHandler(SchoolAlreadyExistsException.class)
+    public ResponseEntity<Object> handleSchoolAlreadyExists(SchoolAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of(
+                        "code", 409,
+                        "error", ex.getMessage()
+                ));
+    }
+    @ExceptionHandler(SchoolNotFoundException.class)
+    public ResponseEntity<Object> handleSchoolNotFoundException(SchoolNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                Map.of(
+                        "error", 404,
+                        "message", ex.getMessage()
+                )
         );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    @ExceptionHandler(DisciplineAlreadyExistsException.class)
+    public ResponseEntity<Object> handleDisciplineAlreadyExists(DisciplineAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "code", 404,
+                        "error", ex.getMessage()
+                ));
+    }
+    @ExceptionHandler(DisciplineNotFoundException.class)
+    public ResponseEntity<Object> handleDisciplineNotFound(DisciplineNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "code", 404,
+                        "error", ex.getMessage()
+                ));
+    }
+    @ExceptionHandler(IesNotFoundException.class)
+    public ResponseEntity<Object> handleIesNotFound(IesNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "code", 404,
+                        "error", ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(InactiveEntityException.class)
