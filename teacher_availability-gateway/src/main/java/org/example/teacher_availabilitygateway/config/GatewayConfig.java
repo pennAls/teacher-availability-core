@@ -19,4 +19,28 @@ public class GatewayConfig {
                 .filter(lb("MS-SECURITY"))
                 .build();
     }
+
+    @Bean
+    public RouterFunction<ServerResponse> academicRoute() {
+        return route("ms-academic")
+                .route(path("/ies/**", "/schools/**", "/disciplines/**"), http())
+                .filter(lb("MS-ACADEMIC"))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> teacherRoute() {
+        return route("ms-teacher")
+                .route(path("/teachers/**", "/degrees/**"), http())
+                .filter(lb("MS-TEACHER"))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> planningRoute() {
+        return route("ms-planning")
+                .route(path("/availabilities/**", "/interests/**"), http())
+                .filter(lb("MS-PLANNING"))
+                .build();
+    }
 }
