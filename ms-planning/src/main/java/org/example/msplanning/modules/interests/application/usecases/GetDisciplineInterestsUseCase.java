@@ -1,37 +1,49 @@
-package com.example.teacheravailabilityapi.modules.interests.application.usecases;
+package org.example.msplanning.modules.interests.application.usecases;
 
-import com.example.teacheravailabilityapi.modules.interests.infra.dtos.DisciplineInterestResponseDto;
-import com.example.teacheravailabilityapi.modules.interests.infra.persistence.DisciplineInterestRepository;
-import com.example.teacheravailabilityapi.modules.teacher.domain.exceptions.TeacherNotFoundException;
-import com.example.teacheravailabilityapi.modules.teacher.infra.persistence.TeacherRepository;
-import com.example.teacheravailabilityapi.modules.users.domain.User;
-import com.example.teacheravailabilityapi.utils.UseAuth;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.example.msplanning.modules.interests.infra.dtos.DisciplineClientResponse;
+import org.example.msplanning.modules.interests.infra.dtos.DisciplineInterestResponseDto;
+import org.example.msplanning.modules.interests.infra.persistence.DisciplineInterestRepository;
+import org.example.msplanning.modules.interests.infra.clients.TeacherClient;
+import org.example.msplanning.modules.interests.infra.clients.AcademicClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class GetDisciplineInterestsUseCase {
 
     private final DisciplineInterestRepository interestRepository;
-    private final TeacherRepository teacherRepository;
+    private final TeacherClient teacherClient;
+    private final AcademicClient academicClient;
 
-    public GetDisciplineInterestsUseCase(DisciplineInterestRepository interestRepository, TeacherRepository teacherRepository) {
+    public GetDisciplineInterestsUseCase(
+            DisciplineInterestRepository interestRepository,
+            TeacherClient teacherClient,
+            AcademicClient academicClient) {
         this.interestRepository = interestRepository;
-        this.teacherRepository = teacherRepository;
+        this.teacherClient = teacherClient;
+        this.academicClient = academicClient;
     }
 
-    public List<DisciplineInterestResponseDto> execute() {
+    public List<DisciplineInterestResponseDto> execute(String bearerToken) {
 
-        var teacher = teacherRepository.findByUserId(UseAuth.GetAuthenticatedUser())
-                .orElseThrow(() -> new TeacherNotFoundException("Perfil de professor não encontrado."));
+        var teacher = teacherClient.getMe(bearerToken);
 
-        return interestRepository.findByTeacherIdOrderByPriorityAsc(teacher.getId())
-                .stream()
-                .map(DisciplineInterestResponseDto::new)
+        var interests = interestRepository.findByTeacherIdOrderByPriorityAsc(teacher.id());
+
+        if (interests.isEmpty()) {
+            return List.of();
+        }
+
+        var allDisciplinesMap = academicClient.getAllDisciplines().stream()
+                .collect(Collectors.toMap(DisciplineClientResponse::id, d -> d));
+
+        return interests.stream()
+                .map(interest -> {
+                    var disciplineData = allDisciplinesMap.get(interest.getDisciplineId());
+                    return new DisciplineInterestResponseDto(interest, disciplineData);
+                })
                 .collect(Collectors.toList());
     }
 }

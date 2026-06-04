@@ -1,4 +1,4 @@
-package com.example.teacheravailabilityapi.modules.interests.infra.dtos;
+package org.example.msplanning.modules.interests.infra.dtos;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

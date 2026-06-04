@@ -1,4 +1,4 @@
-package com.example.teacheravailabilityapi.modules.interests.infra.dtos;
+package org.example.msplanning.modules.interests.infra.dtos;
 
 import java.util.List;
 import java.util.UUID;

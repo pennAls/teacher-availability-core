@@ -1,4 +1,4 @@
-package org.example.msacademic.security;
+package org.example.msplanning.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

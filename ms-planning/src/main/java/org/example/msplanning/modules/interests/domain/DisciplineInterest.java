@@ -1,7 +1,5 @@
-package com.example.teacheravailabilityapi.modules.interests.domain;
+package org.example.msplanning.modules.interests.domain;
 
-import com.example.teacheravailabilityapi.modules.disciplines.domain.Discipline;
-import com.example.teacheravailabilityapi.modules.teacher.domain.Teacher;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,20 +18,18 @@ public class DisciplineInterest {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id", nullable = false)
-    private Teacher teacher;
+    @Column(nullable = false)
+    private UUID teacherId;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "discipline_id", nullable = false)
-    private Discipline discipline;
+    @Column(nullable = false)
+    private UUID disciplineId;
 
     @Column(nullable = false)
     private Integer priority;
 
-    public DisciplineInterest(Teacher teacher, Discipline discipline, Integer priority) {
-        this.teacher = teacher;
-        this.discipline = discipline;
+    public DisciplineInterest(UUID teacherId, UUID disciplineId, Integer priority) {
+        this.teacherId = teacherId;
+        this.disciplineId = disciplineId;
         this.priority = priority;
     }
 }

@@ -1,37 +1,31 @@
-package com.example.teacheravailabilityapi.modules.interests.application.usecases;
+package org.example.msplanning.modules.interests.application.usecases;
 
-import com.example.teacheravailabilityapi.modules.interests.domain.exceptions.DisciplineInterestNotFoundException;
-import com.example.teacheravailabilityapi.modules.interests.domain.exceptions.UniqueSchoolViolationException;
-import com.example.teacheravailabilityapi.modules.interests.infra.persistence.DisciplineInterestRepository;
-import com.example.teacheravailabilityapi.modules.teacher.domain.exceptions.TeacherNotFoundException;
-import com.example.teacheravailabilityapi.modules.teacher.infra.persistence.TeacherRepository;
-import com.example.teacheravailabilityapi.modules.users.domain.User;
-import com.example.teacheravailabilityapi.utils.UseAuth;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.example.msplanning.modules.interests.infra.clients.TeacherClient;
+import org.example.msplanning.modules.interests.infra.persistence.DisciplineInterestRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
 public class DeleteDisciplineInterestUseCase {
-    private final DisciplineInterestRepository interestRepository;
-    private final TeacherRepository teacherRepository;
 
-    public DeleteDisciplineInterestUseCase(DisciplineInterestRepository interestRepository, TeacherRepository teacherRepository) {
+    private final DisciplineInterestRepository interestRepository;
+    private final TeacherClient teacherClient;
+
+    public DeleteDisciplineInterestUseCase(DisciplineInterestRepository interestRepository, TeacherClient teacherClient) {
         this.interestRepository = interestRepository;
-        this.teacherRepository = teacherRepository;
+        this.teacherClient = teacherClient;
     }
 
-    public void execute(UUID interestId) {
+    public void execute(UUID interestId, String bearerToken) {
 
-        var teacher = teacherRepository.findByUserId(UseAuth.GetAuthenticatedUser())
-                .orElseThrow(() -> new TeacherNotFoundException("Professor não encontrado."));
+        var teacher = teacherClient.getMe(bearerToken);
 
         var interest = interestRepository.findById(interestId)
-                .orElseThrow(() -> new DisciplineInterestNotFoundException("Registro de interesse não encontrado."));
+                .orElseThrow(() -> new RuntimeException("Registro de interesse não encontrado."));
 
-        if (!interest.getTeacher().getId().equals(teacher.getId())) {
-            throw new UniqueSchoolViolationException("Acesso negado: Você não pode remover o interesse de outro professor.");
+        if (!interest.getTeacherId().equals(teacher.id())) {
+            throw new RuntimeException("Acesso negado: Você não pode remover o interesse de outro professor.");
         }
 
         interestRepository.delete(interest);

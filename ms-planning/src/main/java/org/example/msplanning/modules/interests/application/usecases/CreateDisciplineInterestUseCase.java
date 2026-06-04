@@ -1,55 +1,65 @@
-package com.example.teacheravailabilityapi.modules.interests.application.usecases;
-import com.example.teacheravailabilityapi.exceptions.InactiveEntityException;
-import com.example.teacheravailabilityapi.modules.disciplines.domain.exceptions.DisciplineNotFoundException;
-import com.example.teacheravailabilityapi.modules.disciplines.infra.persistence.DisciplineRepository;
-import com.example.teacheravailabilityapi.modules.interests.domain.DisciplineInterest;
-import com.example.teacheravailabilityapi.modules.interests.domain.exceptions.DuplicateInterestException;
-import com.example.teacheravailabilityapi.modules.interests.domain.exceptions.UniqueSchoolViolationException;
-import com.example.teacheravailabilityapi.modules.interests.infra.dtos.CreateInterestRequestDto;
-import com.example.teacheravailabilityapi.modules.interests.infra.persistence.DisciplineInterestRepository;
-import com.example.teacheravailabilityapi.modules.teacher.domain.exceptions.TeacherNotFoundException;
-import com.example.teacheravailabilityapi.modules.teacher.infra.persistence.TeacherRepository;
-import com.example.teacheravailabilityapi.utils.UseAuth;
+package org.example.msplanning.modules.interests.application.usecases;
+import org.example.msplanning.exceptions.InactiveEntityException;
+import org.example.msplanning.modules.interests.domain.DisciplineInterest;
+import org.example.msplanning.modules.interests.domain.exceptions.DisciplineNotFoundException;
+import org.example.msplanning.modules.interests.domain.exceptions.DuplicateInterestException;
+import org.example.msplanning.modules.interests.domain.exceptions.UniqueSchoolViolationException;
+import org.example.msplanning.modules.interests.infra.clients.AcademicClient;
+import org.example.msplanning.modules.interests.infra.clients.TeacherClient;
+import org.example.msplanning.modules.interests.infra.dtos.CreateInterestRequestDto;
+import org.example.msplanning.modules.interests.infra.dtos.DisciplineInterestResponseDto;
+import org.example.msplanning.modules.interests.infra.persistence.DisciplineInterestRepository;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CreateDisciplineInterestUseCase {
 
     private final DisciplineInterestRepository interestRepository;
-    private final TeacherRepository teacherRepository;
-    private final DisciplineRepository disciplineRepository;
+    private final TeacherClient teacherClient;
+    private final AcademicClient academicClient;
 
     public CreateDisciplineInterestUseCase(
             DisciplineInterestRepository interestRepository,
-            TeacherRepository teacherRepository,
-            DisciplineRepository disciplineRepository) {
+            TeacherClient teacherClient,
+            AcademicClient academicClient
+    ) {
         this.interestRepository = interestRepository;
-        this.teacherRepository = teacherRepository;
-        this.disciplineRepository = disciplineRepository;
+        this.teacherClient = teacherClient;
+        this.academicClient = academicClient;
     }
 
-    public DisciplineInterest execute(CreateInterestRequestDto data) {
+    public DisciplineInterestResponseDto execute(CreateInterestRequestDto dto, String bearerToken) {
 
-        var teacher = teacherRepository.findByUserId(UseAuth.GetAuthenticatedUser())
-                .orElseThrow(() -> new TeacherNotFoundException("Perfil de professor não encontrado."));
+        var teacher = teacherClient.getMe(bearerToken);
 
-        var discipline = disciplineRepository.findById(data.disciplineId())
+        var allDisciplines = academicClient.getAllDisciplines();
+
+        var discipline = allDisciplines.stream()
+                .filter(d -> d.id().equals(dto.disciplineId()))
+                .findFirst()
                 .orElseThrow(() -> new DisciplineNotFoundException("Disciplina não encontrada."));
 
-        if (interestRepository.existsByTeacherIdAndDisciplineId(teacher.getId(), discipline.getId())) {
+        if (interestRepository.existsByTeacherIdAndDisciplineId(teacher.id(), discipline.id())) {
             throw new DuplicateInterestException("Você já indicou interesse nesta disciplina.");
         }
-        if (!discipline.getIsActive()) {
+
+        if (!discipline.isActive()) {
             throw new InactiveEntityException("Não é possível registrar interesse em uma disciplina inativa.");
         }
-        if (!discipline.getSchool().getId().equals(teacher.getSchool().getId())) {
+
+        if (!discipline.schoolId().equals(teacher.schoolId())) {
             throw new UniqueSchoolViolationException(
-                    "Restrição de Escola: Você só pode registrar interesse em disciplinas vinculadas à " + teacher.getSchool().getName() + "."
+                    "Restrição de Escola: Você só pode registrar interesse em disciplinas vinculadas à sua escola."
             );
         }
 
-        DisciplineInterest interest = new DisciplineInterest(teacher, discipline, data.priority());
+        DisciplineInterest interest = new DisciplineInterest(
+                teacher.id(),
+                discipline.id(),
+                dto.priority()
+        );
 
-        return interestRepository.save(interest);
+        var savedInterest = interestRepository.save(interest);
+        return new DisciplineInterestResponseDto(savedInterest, discipline);
     }
 }

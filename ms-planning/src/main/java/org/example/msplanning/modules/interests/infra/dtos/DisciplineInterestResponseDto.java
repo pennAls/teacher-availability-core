@@ -1,6 +1,7 @@
-package com.example.teacheravailabilityapi.modules.interests.infra.dtos;
+package org.example.msplanning.modules.interests.infra.dtos;
 
-import com.example.teacheravailabilityapi.modules.interests.domain.DisciplineInterest;
+import org.example.msplanning.modules.interests.domain.DisciplineInterest;
+
 import java.util.UUID;
 
 public record DisciplineInterestResponseDto(
@@ -8,17 +9,18 @@ public record DisciplineInterestResponseDto(
         Integer priority,
         DisciplineSummaryDto discipline
 ) {
-    public DisciplineInterestResponseDto(DisciplineInterest interest) {
+    public DisciplineInterestResponseDto(DisciplineInterest interest, DisciplineClientResponse disciplineData) {
         this(
                 interest.getId(),
                 interest.getPriority(),
                 new DisciplineSummaryDto(
-                        interest.getDiscipline().getId(),
-                        interest.getDiscipline().getAcronym(),
-                        interest.getDiscipline().getDescription(),
-                        interest.getDiscipline().getWorkload()
+                        disciplineData.id(),
+                        disciplineData.acronym(),
+                        disciplineData.description(),
+                        disciplineData.workload()
                 )
         );
     }
+
     public record DisciplineSummaryDto(UUID id, String acronym, String description, Double workload) {}
 }

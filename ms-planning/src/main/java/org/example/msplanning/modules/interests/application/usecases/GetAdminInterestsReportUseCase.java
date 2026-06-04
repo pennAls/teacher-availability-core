@@ -1,44 +1,80 @@
-package com.example.teacheravailabilityapi.modules.interests.application.usecases;
-import com.example.teacheravailabilityapi.modules.interests.domain.DisciplineInterest;
-import com.example.teacheravailabilityapi.modules.interests.infra.dtos.AdminTeacherInterestsReportDto;
-import com.example.teacheravailabilityapi.modules.interests.infra.persistence.DisciplineInterestRepository;
+package org.example.msplanning.modules.interests.application.usecases;
+
+import org.example.msplanning.modules.interests.domain.DisciplineInterest;
+import org.example.msplanning.modules.interests.infra.dtos.AdminTeacherInterestsReportDto;
+import org.example.msplanning.modules.interests.infra.dtos.DisciplineClientResponse;
+import org.example.msplanning.modules.interests.infra.dtos.TeacherClientResponse;
+import org.example.msplanning.modules.interests.infra.persistence.DisciplineInterestRepository;
+import org.example.msplanning.modules.interests.infra.clients.AcademicClient;
+import org.example.msplanning.modules.interests.infra.clients.TeacherClient;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class GetAdminInterestsReportUseCase {
-    private final DisciplineInterestRepository repository;
 
-    public GetAdminInterestsReportUseCase(DisciplineInterestRepository repository) {
+    private final DisciplineInterestRepository repository;
+    private final TeacherClient teacherClient;
+    private final AcademicClient academicClient;
+
+    public GetAdminInterestsReportUseCase(
+            DisciplineInterestRepository repository,
+            TeacherClient teacherClient,
+            AcademicClient academicClient) {
         this.repository = repository;
+        this.teacherClient = teacherClient;
+        this.academicClient = academicClient;
     }
 
     public List<AdminTeacherInterestsReportDto> execute() {
-        var allInterests = repository.findAllForAdminReport();
 
-        var groupedByTeacher = allInterests.stream()
-                .collect(Collectors.groupingBy(
-                        DisciplineInterest::getTeacher,
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ));
+        List<DisciplineInterest> allInterests = repository.findAll();
 
-        return groupedByTeacher.entrySet().stream().map(entry -> {
-            var teacher = entry.getKey();
-            var interestsList = entry.getValue().stream()
-                    .map(i -> new AdminTeacherInterestsReportDto.InterestDetailDto(
-                            i.getDiscipline().getAcronym(),
-                            i.getDiscipline().getDescription(),
-                            i.getPriority()
-                    ))
-                    .toList();
+        if (allInterests.isEmpty()) {
+            return List.of();
+        }
+
+
+        Map<UUID, DisciplineClientResponse> discMap = academicClient.getAllDisciplines()
+                .stream()
+                .collect(Collectors.toMap(DisciplineClientResponse::id, d -> d));
+
+        Map<UUID, TeacherClientResponse> teacherMap = teacherClient.getAllTeachers()
+                .stream()
+                .collect(Collectors.toMap(TeacherClientResponse::id, t -> t));
+
+
+        var groupedByTeacherId = allInterests.stream()
+                .collect(Collectors.groupingBy(DisciplineInterest::getTeacherId));
+
+        return groupedByTeacherId.entrySet().stream().map(entry -> {
+            UUID teacherId = entry.getKey();
+            List<DisciplineInterest> interests = entry.getValue();
+
+            TeacherClientResponse teacher = teacherMap.get(teacherId);
+            String teacherName = (teacher != null) ? teacher.name() : "Professor Desconhecido";
+
+            var interestsList = interests.stream().map(i -> {
+
+                DisciplineClientResponse disc = discMap.get(i.getDisciplineId());
+
+                String acronym = (disc != null && disc.acronym() != null) ? disc.acronym() : "N/A";
+                String description = (disc != null && disc.description() != null) ? disc.description() : "Disciplina indisponível";
+
+                return new AdminTeacherInterestsReportDto.InterestDetailDto(
+                        acronym,
+                        description,
+                        i.getPriority()
+                );
+            }).toList();
 
             return new AdminTeacherInterestsReportDto(
-                    teacher.getId(),
-                    teacher.getFullName(),
+                    teacherId,
+                    teacherName,
                     interestsList
             );
         }).toList();

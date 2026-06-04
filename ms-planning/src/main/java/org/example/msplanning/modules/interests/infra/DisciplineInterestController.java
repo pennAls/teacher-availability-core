@@ -1,13 +1,13 @@
-package com.example.teacheravailabilityapi.modules.interests.infra;
+package org.example.msplanning.modules.interests.infra;
 
-import com.example.teacheravailabilityapi.modules.interests.application.usecases.CreateDisciplineInterestUseCase;
-import com.example.teacheravailabilityapi.modules.interests.application.usecases.DeleteDisciplineInterestUseCase;
-import com.example.teacheravailabilityapi.modules.interests.application.usecases.GetAdminInterestsReportUseCase;
-import com.example.teacheravailabilityapi.modules.interests.application.usecases.GetDisciplineInterestsUseCase;
-import com.example.teacheravailabilityapi.modules.interests.infra.dtos.AdminTeacherInterestsReportDto;
-import com.example.teacheravailabilityapi.modules.interests.infra.dtos.CreateInterestRequestDto;
-import com.example.teacheravailabilityapi.modules.interests.infra.dtos.DisciplineInterestResponseDto;
 import jakarta.validation.Valid;
+import org.example.msplanning.modules.interests.application.usecases.CreateDisciplineInterestUseCase;
+import org.example.msplanning.modules.interests.application.usecases.DeleteDisciplineInterestUseCase;
+import org.example.msplanning.modules.interests.application.usecases.GetAdminInterestsReportUseCase;
+import org.example.msplanning.modules.interests.application.usecases.GetDisciplineInterestsUseCase;
+import org.example.msplanning.modules.interests.infra.dtos.AdminTeacherInterestsReportDto;
+import org.example.msplanning.modules.interests.infra.dtos.CreateInterestRequestDto;
+import org.example.msplanning.modules.interests.infra.dtos.DisciplineInterestResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +26,9 @@ public class DisciplineInterestController {
 
     public DisciplineInterestController(
             CreateDisciplineInterestUseCase createDisciplineInterestUseCase,
-            GetDisciplineInterestsUseCase getMyDisciplineInterestsUseCase, DeleteDisciplineInterestUseCase deleteDisciplineInterestUseCase, GetAdminInterestsReportUseCase getAdminInterestsReportUseCase) {
+            GetDisciplineInterestsUseCase getMyDisciplineInterestsUseCase,
+            DeleteDisciplineInterestUseCase deleteDisciplineInterestUseCase,
+            GetAdminInterestsReportUseCase getAdminInterestsReportUseCase) {
         this.createDisciplineInterestUseCase = createDisciplineInterestUseCase;
         this.getMyDisciplineInterestsUseCase = getMyDisciplineInterestsUseCase;
         this.deleteDisciplineInterestUseCase = deleteDisciplineInterestUseCase;
@@ -34,21 +36,28 @@ public class DisciplineInterestController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<DisciplineInterestResponseDto> create(@Valid @RequestBody CreateInterestRequestDto data) {
-        var interest = createDisciplineInterestUseCase.execute(data);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new DisciplineInterestResponseDto(interest));
+    public ResponseEntity<DisciplineInterestResponseDto> create(
+            @Valid @RequestBody CreateInterestRequestDto dto,
+            @RequestHeader("Authorization") String bearerToken) {
+        var interest = createDisciplineInterestUseCase.execute(dto, bearerToken);
+        return ResponseEntity.status(HttpStatus.CREATED).body(interest);
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<DisciplineInterestResponseDto>> getMe() {
-        var interests = getMyDisciplineInterestsUseCase.execute();
+    public ResponseEntity<List<DisciplineInterestResponseDto>> getMe(
+            @RequestHeader("Authorization") String bearerToken) {
+        var interests = getMyDisciplineInterestsUseCase.execute(bearerToken);
         return ResponseEntity.ok(interests);
     }
+
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        deleteDisciplineInterestUseCase.execute(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String bearerToken) {
+        deleteDisciplineInterestUseCase.execute(id, bearerToken);
         return ResponseEntity.noContent().build();
     }
+
     @GetMapping("/admin/report")
     public ResponseEntity<List<AdminTeacherInterestsReportDto>> getAdminReport() {
         return ResponseEntity.ok(getAdminInterestsReportUseCase.execute());
