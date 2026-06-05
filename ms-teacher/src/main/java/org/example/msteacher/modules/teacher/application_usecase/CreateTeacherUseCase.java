@@ -1,11 +1,7 @@
 package org.example.msteacher.modules.teacher.application_usecase;
 
 import jakarta.transaction.Transactional;
-import org.example.mssecurity.exceptions.InactiveEntityException;
-import org.example.mssecurity.modules.users.domain.User;
 import org.example.mssecurity.modules.users.domain.exceptions.EmailAlreadyExistsException;
-import org.example.mssecurity.modules.users.domain.types.UserRole;
-import org.example.mssecurity.modules.users.infra.persistence.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.example.msteacher.modules.teacher.domain.Teacher;

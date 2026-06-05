@@ -15,7 +15,6 @@ public class Teacher {
     private UUID id;
 
     @Column
-    @JoinColumn(name = "user_id", unique = true, nullable = false)
     private UUID userid;
 
     @Column(name = "institutionalEmail", nullable = false)
@@ -31,10 +30,8 @@ public class Teacher {
     private String phone;
 
     @Column
-    @JoinColumn(name = "school_id", nullable = false)
     private UUID schoolid;
 
-    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AcademicDegree> degrees = new ArrayList<>();
 
     public Teacher() {}
