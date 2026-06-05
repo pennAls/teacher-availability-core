@@ -32,7 +32,7 @@ public class CreateDisciplineInterestUseCase {
 
         var teacher = teacherClient.getMe(bearerToken);
 
-        var allDisciplines = academicClient.getAllDisciplines();
+        var allDisciplines = academicClient.getAllDisciplines(bearerToken);
 
         var discipline = allDisciplines.stream()
                 .filter(d -> d.id().equals(dto.disciplineId()))

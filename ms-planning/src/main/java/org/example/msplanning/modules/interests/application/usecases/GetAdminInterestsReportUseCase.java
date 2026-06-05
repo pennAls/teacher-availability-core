@@ -30,7 +30,7 @@ public class GetAdminInterestsReportUseCase {
         this.academicClient = academicClient;
     }
 
-    public List<AdminTeacherInterestsReportDto> execute() {
+    public List<AdminTeacherInterestsReportDto> execute(String bearerToken) {
 
         List<DisciplineInterest> allInterests = repository.findAll();
 
@@ -38,15 +38,13 @@ public class GetAdminInterestsReportUseCase {
             return List.of();
         }
 
-
-        Map<UUID, DisciplineClientResponse> discMap = academicClient.getAllDisciplines()
+        Map<UUID, DisciplineClientResponse> discMap = academicClient.getAllDisciplines(bearerToken)
                 .stream()
                 .collect(Collectors.toMap(DisciplineClientResponse::id, d -> d));
 
-        Map<UUID, TeacherClientResponse> teacherMap = teacherClient.getAllTeachers()
+        Map<UUID, TeacherClientResponse> teacherMap = teacherClient.getAllTeachers(bearerToken)
                 .stream()
                 .collect(Collectors.toMap(TeacherClientResponse::id, t -> t));
-
 
         var groupedByTeacherId = allInterests.stream()
                 .collect(Collectors.groupingBy(DisciplineInterest::getTeacherId));

@@ -1,5 +1,4 @@
 package org.example.msplanning.modules.interests.infra;
-
 import jakarta.validation.Valid;
 import org.example.msplanning.modules.interests.application.usecases.CreateDisciplineInterestUseCase;
 import org.example.msplanning.modules.interests.application.usecases.DeleteDisciplineInterestUseCase;
@@ -38,14 +37,18 @@ public class DisciplineInterestController {
     @PostMapping("/create")
     public ResponseEntity<DisciplineInterestResponseDto> create(
             @Valid @RequestBody CreateInterestRequestDto dto,
-            @RequestHeader("Authorization") String bearerToken) {
+            @RequestHeader("Authorization") String bearerToken
+
+    ) {
         var interest = createDisciplineInterestUseCase.execute(dto, bearerToken);
         return ResponseEntity.status(HttpStatus.CREATED).body(interest);
     }
 
     @GetMapping("/me")
     public ResponseEntity<List<DisciplineInterestResponseDto>> getMe(
-            @RequestHeader("Authorization") String bearerToken) {
+            @RequestHeader("Authorization") String bearerToken
+
+    ) {
         var interests = getMyDisciplineInterestsUseCase.execute(bearerToken);
         return ResponseEntity.ok(interests);
     }
@@ -53,13 +56,16 @@ public class DisciplineInterestController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable UUID id,
-            @RequestHeader("Authorization") String bearerToken) {
+            @RequestHeader("Authorization") String bearerToken
+    ) {
         deleteDisciplineInterestUseCase.execute(id, bearerToken);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/admin/report")
-    public ResponseEntity<List<AdminTeacherInterestsReportDto>> getAdminReport() {
-        return ResponseEntity.ok(getAdminInterestsReportUseCase.execute());
+    public ResponseEntity<List<AdminTeacherInterestsReportDto>> getAdminReport(
+            @RequestHeader("Authorization") String bearerToken
+    ) {
+        return ResponseEntity.ok(getAdminInterestsReportUseCase.execute(bearerToken));
     }
 }

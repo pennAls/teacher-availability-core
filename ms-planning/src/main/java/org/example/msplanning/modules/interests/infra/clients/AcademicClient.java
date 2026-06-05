@@ -4,6 +4,8 @@ import org.example.msplanning.modules.interests.infra.dtos.DisciplineClientRespo
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+
 import java.util.List;
 
 @SpringBootApplication
@@ -11,5 +13,5 @@ import java.util.List;
 public interface AcademicClient {
 
     @GetMapping("/disciplines/getAll")
-    List<DisciplineClientResponse> getAllDisciplines();
+    List<DisciplineClientResponse> getAllDisciplines(@RequestHeader("Authorization") String token);
 }

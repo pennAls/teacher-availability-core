@@ -16,6 +16,6 @@ public interface TeacherClient {
     TeacherClientResponse getMe(@RequestHeader("Authorization") String token);
 
     @GetMapping("/teachers/getAll")
-    List<TeacherClientResponse> getAllTeachers();
+    List<TeacherClientResponse> getAllTeachers(@RequestHeader("Authorization") String token);
 
 }

@@ -36,7 +36,7 @@ public class GetDisciplineInterestsUseCase {
             return List.of();
         }
 
-        var allDisciplinesMap = academicClient.getAllDisciplines().stream()
+        var allDisciplinesMap = academicClient.getAllDisciplines(bearerToken).stream()
                 .collect(Collectors.toMap(DisciplineClientResponse::id, d -> d));
 
         return interests.stream()
