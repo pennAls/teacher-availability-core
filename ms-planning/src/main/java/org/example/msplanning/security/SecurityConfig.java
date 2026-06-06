@@ -1,5 +1,4 @@
 package org.example.msplanning.security;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,9 +12,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final SecurityFilter securityFilter;
+    private final CustomSecurityExceptionHandler customSecurityExceptionHandler;
 
-    public SecurityConfig(SecurityFilter securityFilter) {
+    public SecurityConfig(SecurityFilter securityFilter, CustomSecurityExceptionHandler customSecurityExceptionHandler) {
         this.securityFilter = securityFilter;
+        this.customSecurityExceptionHandler = customSecurityExceptionHandler;
     }
 
     @Bean
@@ -23,6 +24,10 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(customSecurityExceptionHandler)
+                        .accessDeniedHandler(customSecurityExceptionHandler)
+                )
                 .authorizeHttpRequests(req -> {
                     req.anyRequest().authenticated();
                 })
