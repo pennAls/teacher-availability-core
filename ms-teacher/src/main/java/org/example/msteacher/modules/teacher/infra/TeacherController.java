@@ -29,9 +29,11 @@ public class TeacherController {
         this.listAllTeachersUseCase = listAllTeachersUseCase;
     }
 
-    @PostMapping("create")
-    public ResponseEntity<TeacherResponseDto> create(@Valid @RequestBody CreateTeacherRequestDto data) {
-        var teacher = createTeacherUseCase.execute(data);
+    @PostMapping("/create")
+    public ResponseEntity<TeacherResponseDto> create(
+            @Valid @RequestBody CreateTeacherRequestDto data,
+            @RequestHeader("Authorization") String authorizationHeader) {
+        var teacher = createTeacherUseCase.execute(data, authorizationHeader);
         return ResponseEntity.status(HttpStatus.CREATED).body(new TeacherResponseDto(teacher));
     }
 

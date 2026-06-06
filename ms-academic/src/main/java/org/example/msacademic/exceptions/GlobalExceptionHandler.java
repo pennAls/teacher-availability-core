@@ -6,7 +6,6 @@ import org.example.msacademic.modules.disciplines.domain.exceptions.DisciplineNo
 import org.example.msacademic.modules.ies.domain.exceptions.IesNotFoundException;
 import org.example.msacademic.modules.schools.domain.exceptions.SchoolAlreadyExistsException;
 import org.example.msacademic.modules.schools.domain.exceptions.SchoolNotFoundException;
-import org.example.mssecurity.exceptions.InactiveEntityException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

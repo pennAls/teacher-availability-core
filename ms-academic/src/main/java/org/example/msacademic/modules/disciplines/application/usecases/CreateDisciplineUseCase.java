@@ -6,7 +6,7 @@ import org.example.msacademic.modules.disciplines.infra.dtos.DisciplineRequestDt
 import org.example.msacademic.modules.disciplines.infra.persistence.DisciplineRepository;
 import org.example.msacademic.modules.schools.domain.exceptions.SchoolNotFoundException;
 import org.example.msacademic.modules.schools.infra.persistence.SchoolRepository;
-import org.example.mssecurity.exceptions.InactiveEntityException;
+import org.example.msacademic.exceptions.InactiveEntityException;
 import org.springframework.stereotype.Service;
 
 @Service

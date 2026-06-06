@@ -1,9 +1,11 @@
 package org.example.msteacher.modules.teacher.application_usecase;
 
-import org.hibernate.mapping.List;
 import org.springframework.stereotype.Service;
 import org.example.msteacher.modules.teacher.infra.dtos.TeacherResponseDto;
 import org.example.msteacher.modules.teacher.infra.persistence.TeacherRepository;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ListAllTeachersUseCase {

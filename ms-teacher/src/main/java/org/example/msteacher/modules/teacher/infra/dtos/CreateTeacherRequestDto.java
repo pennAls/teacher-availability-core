@@ -3,15 +3,16 @@ package org.example.msteacher.modules.teacher.infra.dtos;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.UUID;
+
+import java.util.UUID;
 
 public record CreateTeacherRequestDto(
         @NotBlank(message = "O e-mail é obrigatório.")
         @Email(message = "Formato de e-mail inválido.")
         String email,
 
-        @NotBlank(message = "O e-mail é obrigatório.")
-        @Email(message = "Formato de e-mail inválido.")
+        @NotBlank(message = "O e-mail institucional é obrigatório.")
+        @Email(message = "Formato de e-mail institucional inválido.")
         String institutionalEmail,
 
         @NotBlank(message = "A senha é obrigatória.")

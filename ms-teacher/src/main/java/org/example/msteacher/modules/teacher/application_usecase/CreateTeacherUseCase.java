@@ -1,67 +1,91 @@
 package org.example.msteacher.modules.teacher.application_usecase;
 
+import feign.FeignException;
 import jakarta.transaction.Transactional;
-import org.example.mssecurity.modules.users.domain.exceptions.EmailAlreadyExistsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+import org.example.msteacher.clients.academic.SchoolClient;
+import org.example.msteacher.clients.academic.dto.SchoolValidationResponse;
+import org.example.msteacher.clients.security.SecurityClient;
+import org.example.msteacher.clients.security.dto.CreateUserRequest;
+import org.example.msteacher.clients.security.dto.CreateUserResponse;
 import org.example.msteacher.modules.teacher.domain.Teacher;
+import org.example.msteacher.modules.teacher.domain.exceptions.EmailAlreadyExistsException;
+import org.example.msteacher.modules.teacher.domain.exceptions.InactiveSchoolException;
+import org.example.msteacher.modules.teacher.domain.exceptions.InvalidSchoolException;
 import org.example.msteacher.modules.teacher.domain.exceptions.RegistrationAlreadyExistsException;
 import org.example.msteacher.modules.teacher.infra.dtos.CreateTeacherRequestDto;
 import org.example.msteacher.modules.teacher.infra.persistence.TeacherRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 public class CreateTeacherUseCase {
 
     private final TeacherRepository teacherRepository;
-    private final UserRepository userRepository;
-    private final SchoolRepository schoolRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final SchoolClient schoolClient;
+    private final SecurityClient securityClient;
 
     public CreateTeacherUseCase(
             TeacherRepository teacherRepository,
-            UserRepository userRepository,
-            SchoolRepository schoolRepository,
-            PasswordEncoder passwordEncoder) {
+            SchoolClient schoolClient,
+            SecurityClient securityClient) {
         this.teacherRepository = teacherRepository;
-        this.userRepository = userRepository;
-        this.schoolRepository = schoolRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.schoolClient = schoolClient;
+        this.securityClient = securityClient;
     }
 
     @Transactional
-    public Teacher execute(CreateTeacherRequestDto data) {
-
-        if (userRepository.existsByEmail(data.email())) {
-            throw new EmailAlreadyExistsException("O e-mail informado já está em uso.");
-        }
+    public Teacher execute(CreateTeacherRequestDto data, String authorizationHeader) {
 
         if (teacherRepository.existsByRegistration(data.registration())) {
             throw new RegistrationAlreadyExistsException("A matrícula informada já está em uso.");
         }
 
-        var school = schoolRepository.findById(data.schoolId())
-                .orElseThrow(() -> new SchoolNotFoundException("Escola não encontrada."));
+        SchoolValidationResponse school = fetchAndValidateSchool(data.schoolId());
 
-        if (!school.getIsActive()) {
-            throw new InactiveEntityException("Não é possível vincular o professor a uma Escola inativa.");
-        }
-
-        User newUser = new User(
-                data.email(),
-                passwordEncoder.encode(data.password()),
-                UserRole.TEACHER
+        CreateUserResponse userResponse = createUserViaFeign(
+                authorizationHeader,
+                new CreateUserRequest(data.email(), data.password())
         );
-        User savedUser = userRepository.save(newUser);
 
         Teacher newTeacher = new Teacher(
-                savedUser,
+                userResponse.userId(),
+                school.id(),
                 data.fullName(),
                 data.registration(),
                 data.phone(),
-                school,
                 data.institutionalEmail()
         );
 
         return teacherRepository.save(newTeacher);
+    }
+
+    private SchoolValidationResponse fetchAndValidateSchool(UUID schoolId) {
+        try {
+            SchoolValidationResponse school = schoolClient.findById(schoolId);
+            if (school == null) {
+                throw new InvalidSchoolException("Escola não encontrada.");
+            }
+            if (!Boolean.TRUE.equals(school.isActive())) {
+                throw new InactiveSchoolException("Não é possível vincular o professor a uma escola inativa.");
+            }
+            return school;
+        } catch (FeignException.NotFound e) {
+            throw new InvalidSchoolException("Escola não encontrada.");
+        } catch (InvalidSchoolException | InactiveSchoolException e) {
+            throw e;
+        } catch (FeignException e) {
+            throw new RuntimeException("Falha ao consultar o serviço acadêmico: " + e.getMessage());
+        }
+    }
+
+    private CreateUserResponse createUserViaFeign(String authorizationHeader, CreateUserRequest request) {
+        try {
+            return securityClient.createTeacherUser(authorizationHeader, request);
+        } catch (FeignException.Conflict e) {
+            throw new EmailAlreadyExistsException("O e-mail informado já está em uso.");
+        } catch (FeignException e) {
+            throw new RuntimeException("Falha ao criar usuário no serviço de segurança: " + e.getMessage());
+        }
     }
 }

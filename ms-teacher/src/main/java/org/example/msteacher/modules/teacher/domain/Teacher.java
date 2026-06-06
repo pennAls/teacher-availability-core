@@ -1,10 +1,11 @@
 package org.example.msteacher.modules.teacher.domain;
 
 import jakarta.persistence.*;
-import org.example.mssecurity.modules.users.domain.User;
 import org.example.msteacher.modules.academicDegree.domain.AcademicDegree;
-import org.hibernate.mapping.List;
-import org.hibernate.validator.constraints.UUID;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "teachers")
@@ -14,10 +15,13 @@ public class Teacher {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column
-    private UUID userid;
+    @Column(name = "user_id", nullable = false, unique = true)
+    private UUID userId;
 
-    @Column(name = "institutionalEmail", nullable = false)
+    @Column(name = "school_id", nullable = false)
+    private UUID schoolId;
+
+    @Column(name = "institutional_email", nullable = false)
     private String institutionalEmail;
 
     @Column(name = "full_name", nullable = false)
@@ -29,29 +33,26 @@ public class Teacher {
     @Column(nullable = false)
     private String phone;
 
-    @Column
-    private UUID schoolid;
-
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AcademicDegree> degrees = new ArrayList<>();
 
     public Teacher() {}
 
-    public Teacher(User user, String fullName, String registration, String phone, School school, String institutionalEmail) {
-        this.user = user;
+    public Teacher(UUID userId, UUID schoolId, String fullName, String registration, String phone, String institutionalEmail) {
+        this.userId = userId;
+        this.schoolId = schoolId;
         this.fullName = fullName;
         this.registration = registration;
         this.phone = phone;
-        this.school = school;
         this.institutionalEmail = institutionalEmail;
     }
 
     public UUID getId() { return id; }
-    public User getUser() { return user; }
+    public UUID getUserId() { return userId; }
+    public UUID getSchoolId() { return schoolId; }
     public String getFullName() { return fullName; }
     public String getRegistration() { return registration; }
     public String getPhone() { return phone; }
-    public School getSchool() { return school; }
     public String getInstitutionalEmail() { return institutionalEmail; }
-
-    public List<AcademicDegree> getDegrees(){return this.degrees;}
+    public List<AcademicDegree> getDegrees() { return degrees; }
 }
